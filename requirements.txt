@@ -1,1 +1,2 @@
 pandas==0.25.1
+scikit_learn==0.22.2.post1

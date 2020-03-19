@@ -1,4 +1,5 @@
 import os
+from sklearn import preprocessing
 import pandas as pd
 
 
@@ -43,4 +44,17 @@ def get_dataframe(path_to_train=str, author_list=list, preserve_blank_lines=Fals
     
     # devolver pandas DataFrame com dataset de train
     return pd.DataFrame({"text":list_of_texts, "author":list_of_authors})
-    
+
+
+def label_encoding(df, target_col=str):
+    """
+    Encodes the target column for the model, i.e.:
+        - AlmadaNegreiros     -> 0;
+        - CamiloCasteloBranco -> 1;
+        ...
+    """
+    le = preprocessing.LabelEncoder()
+    le.fit(df[target_col].unique())
+    df[target_col] = le.transform(df[target_col])
+    return df
+
