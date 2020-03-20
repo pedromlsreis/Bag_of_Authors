@@ -52,6 +52,7 @@ def label_encoding(df, target_col=str):
         - AlmadaNegreiros     -> 0;
         - CamiloCasteloBranco -> 1;
         ...
+        # TODO: reverse_transform
     """
     le = preprocessing.LabelEncoder()
     le.fit(df[target_col].unique())
