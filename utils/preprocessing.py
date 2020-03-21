@@ -57,5 +57,6 @@ def label_encoding(df, target_col=str):
     le = preprocessing.LabelEncoder()
     le.fit(df[target_col].unique())
     df[target_col] = le.transform(df[target_col])
-    return df
+
+    return df, le
 
