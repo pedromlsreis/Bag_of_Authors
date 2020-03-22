@@ -1,6 +1,7 @@
 import os
 from sklearn import preprocessing
 import pandas as pd
+from collections import Counter
 
 
 def get_dataframe(path_to_train=str, author_list=list, preserve_blank_lines=False,
@@ -52,11 +53,63 @@ def label_encoding(df, target_col=str):
         - AlmadaNegreiros     -> 0;
         - CamiloCasteloBranco -> 1;
         ...
-        # TODO: reverse_transform
     """
     le = preprocessing.LabelEncoder()
     le.fit(df[target_col].unique())
     df[target_col] = le.transform(df[target_col])
-
     return df, le
 
+
+def lowercase(df, text_col):
+    """
+    Lowercases all the text in `df[text_col]`.
+    """    
+    df[text_col] = df[text_col].str.lower()
+    return df
+
+
+def feature_engineering(df, text_col):
+    """
+    Creates new features in `df`, computed from `df[text_col]`.
+    """
+    word_count = df[text_col].str.split().str.len()
+    # char_count = df[text_col].str.len()
+    
+    # comma_count = df[text_col].str.count(",")
+    # df["comma_per_word"] = comma_count / word_count
+    
+    # point_count = df[text_col].str.count(r"\.")
+    # df["point_per_word"] = point_count / word_count
+  
+    ellipsis_count = df[text_col].str.count(r"\.\.\.")
+    df["ellipsis_per_word"] = ellipsis_count.divide(word_count, axis=0)
+    
+    selected_punct = "!,.-:;?"
+    count = lambda l1,l2: sum([1 for x in l1 if x in l2])
+    df["punct_per_word"] = df[text_col].apply(lambda s: count(s, selected_punct)).divide(word_count, axis=0)
+    specific_punct_count = df[text_col].apply(lambda s: {k:v for k, v in Counter(s).items() if k in selected_punct}).apply(pd.Series).fillna(0).divide(word_count, axis=0)
+    df = pd.concat([df, specific_punct_count], axis=1)
+    return df
+    
+
+def remove_punctuation(text):
+    """
+        Greedy removal of all the punctuation from a list of text lines.
+        However, it also removes the email and website punctuation, making
+        them hard to recognise.
+        Returns a list of text lines without punctuation.
+    """
+    no_punct_text = []
+    for line in text:
+        no_punct = "".join([char for char in line if char not in string.punctuation])
+        no_punct_text.append(no_punct)
+    return "".join(no_punct_text)
+
+
+# cada vez que uma nova função for criada, introduzi-la em "clean_text()"
+def clean_text(df, text_col=str):
+    """
+        Compiles all the preprocessing functions inside a single function.
+    """
+    df[text_col] = df[text_col].apply(remove_punctuation)
+    return df
