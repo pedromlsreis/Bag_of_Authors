@@ -1,6 +1,6 @@
 import os
 from sklearn import preprocessing
-import pandas as pd
+import numpy as np, pandas as pd
 from collections import Counter
 
 
@@ -73,24 +73,33 @@ def feature_engineering(df, text_col):
     Creates new features in `df`, computed from `df[text_col]`.
     """
     word_count = df[text_col].str.split().str.len()
-    # char_count = df[text_col].str.len()
-    
-    # comma_count = df[text_col].str.count(",")
-    # df["comma_per_word"] = comma_count / word_count
-    
-    # point_count = df[text_col].str.count(r"\.")
-    # df["point_per_word"] = point_count / word_count
   
     ellipsis_count = df[text_col].str.count(r"\.\.\.")
     df["ellipsis_per_word"] = ellipsis_count.divide(word_count, axis=0)
+
+    df["avg_word_len"] = df[text_col].str.split(" ").apply(
+        lambda x: np.sum([len(i) for i in x])
+        ).divide(word_count, axis=0)
     
     selected_punct = "!,.-:;?"
     count = lambda l1,l2: sum([1 for x in l1 if x in l2])
-    df["punct_per_word"] = df[text_col].apply(lambda s: count(s, selected_punct)).divide(word_count, axis=0)
-    specific_punct_count = df[text_col].apply(lambda s: {k:v for k, v in Counter(s).items() if k in selected_punct}).apply(pd.Series).fillna(0).divide(word_count, axis=0)
+    df["punct_per_word"] = df[text_col].apply(
+        lambda s: count(s, selected_punct)
+        ).divide(word_count, axis=0)
+    
+    specific_punct_count = df[text_col].apply(
+        lambda s: {k:v for k, v in Counter(s).items() if k in selected_punct}
+        ).apply(pd.Series).fillna(0).divide(word_count, axis=0)
+    
     df = pd.concat([df, specific_punct_count], axis=1)
     return df
     
+
+def normalize_features(df, list_of_features):
+    for feature in list_of_features:
+        df[feature] = (df[feature] - df[feature].min()) / (df[feature].max() - df[feature].min())
+    return df
+
 
 def remove_punctuation(text):
     """
