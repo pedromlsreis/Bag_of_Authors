@@ -1,2 +1,4 @@
+numpy==1.16.5
+nltk==3.4.5
 pandas==0.25.1
 scikit_learn==0.22.2.post1
